@@ -35,6 +35,7 @@ export const Navbar: React.FC = () => {
 
         {/* Navigation & Controls */}
         <div className="flex items-center gap-3">
+
           {/* Theme Toggle Button */}
           <Button
             variant="ghost"
@@ -57,6 +58,15 @@ export const Navbar: React.FC = () => {
                   </span>
                 </Button>
               </Link>
+
+              {/* Projects Link */}
+              <Link
+                to="/projects"
+                className="text-sm font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400 mr-2 transition-colors"
+              >
+                Projects
+              </Link>
+
               <Button
                 variant="outline"
                 size="sm"

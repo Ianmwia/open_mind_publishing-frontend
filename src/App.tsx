@@ -11,6 +11,8 @@ import { SignupPage } from '@/pages/auth/SignupPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ChangePasswordPage } from '@/pages/auth/ChangePasswordPage'
 import { ProfilePage } from '@/pages/profile/ProfilePage'
+import { ProjectsListPage } from '@/pages/projects/ProjectsListPage'
+import { ProjectDetailPage } from '@/pages/projects/ProjectDetailPage'
 
 // 1. Create a safe Protected Route wrapper
 const ProtectedRoute = () => {
@@ -40,6 +42,14 @@ export const App: React.FC = () => {
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />
               
+              {/* Projects Routes */}
+              <Route element={<ProtectedRoute />}>
+                  <Route path="/projects" element={<ProjectsListPage />} />
+              </Route>
+              <Route element={<ProtectedRoute />}>
+                  <Route path="/projects/:id" element={<ProjectDetailPage />} />
+              </Route>
+
               {/* 2. Wrap your profile route with the ProtectedRoute guard */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/profile" element={<ProfilePage />} />
