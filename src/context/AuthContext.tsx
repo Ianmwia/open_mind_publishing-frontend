@@ -2,6 +2,27 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import api, { getAuthToken, setAuthToken, clearAuthToken } from '@/api'
 import type { User, Role } from '@/types/api'
 
+// ─── Auth endpoint constants (matching backend urls.py) ──────────────────────
+const AUTH_URLS = {
+  LOGIN: '/auth/login/',
+  SIGNUP: '/auth/signup/',
+  SESSION: '/auth/session/',
+  LOGOUT: '/auth/session/',         // DELETE on /auth/session/ = logout
+  CHANGE_PASSWORD: '/auth/password/change/',
+  REQUEST_RESET: '/auth/password/request/',
+  RESET_PASSWORD: '/auth/password/reset/',
+} as const
+
+// ─── Helper: extract JWT access_token from allauth headless response ─────────
+// Allauth JWT strategy places the access_token inside response.data.meta
+function extractJwtToken(responseData: Record<string, unknown>): string | null {
+  const meta = responseData?.meta as Record<string, unknown> | undefined
+  if (meta?.access_token && typeof meta.access_token === 'string') {
+    return meta.access_token
+  }
+  return null
+}
+
 interface LoginPayload {
   username?: string
   email?: string
@@ -22,7 +43,7 @@ interface AuthContextType {
   login: (credentials: LoginPayload) => Promise<void>
   signup: (payload: SignupPayload) => Promise<void>
   logout: () => Promise<void>
-  requestPasswordReset: (email: string) => Promise<{ message?: string }>
+  requestPasswordReset: (email: string) => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   refreshProfile: () => Promise<User | null>
   updateProfile: (data: Partial<User> & { role_ids?: number[] }) => Promise<User>
@@ -36,20 +57,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // Fetch full profile from our backend accounts API
+  // Fetch full profile from our accounts app
   const refreshProfile = useCallback(async (): Promise<User | null> => {
     const currentToken = getAuthToken()
     if (!currentToken) {
       setUser(null)
       return null
     }
-
     try {
       const response = await api.get<User>('/accounts/get_profile')
       setUser(response.data)
       return response.data
-    } catch (error) {
-      console.warn('Failed to load user profile or token expired:', error)
+    } catch {
       clearAuthToken()
       setTokenState(null)
       setUser(null)
@@ -57,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [])
 
-  // Initial check on mount
+  // On mount: restore session if token exists
   useEffect(() => {
     const initAuth = async () => {
       const existingToken = getAuthToken()
@@ -67,62 +86,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setIsLoading(false)
     }
-
     initAuth()
   }, [refreshProfile])
 
-  // Login handler
+  // ─── Login ────────────────────────────────────────────────────────────────
   const login = async (credentials: LoginPayload) => {
     setIsLoading(true)
     try {
-      const response = await api.post('/auth/account/login/', credentials)
-      
-      // Allauth headless JWT strategy returns session_token in data or header
-      const receivedToken =
-        response.data?.data?.session_token ||
-        response.data?.token ||
-        response.data?.session_token ||
-        response.headers['x-session-token']
-
-      if (receivedToken) {
-        setAuthToken(receivedToken)
-        setTokenState(receivedToken)
+      const response = await api.post<Record<string, unknown>>(AUTH_URLS.LOGIN, credentials)
+      const accessToken = extractJwtToken(response.data)
+      if (!accessToken) {
+        throw new Error('Login succeeded but no JWT access_token was returned. Check HEADLESS_TOKEN_STRATEGY in Django settings.')
       }
-
+      setAuthToken(accessToken)
+      setTokenState(accessToken)
       await refreshProfile()
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Signup handler
+  // ─── Signup ───────────────────────────────────────────────────────────────
   const signup = async (payload: SignupPayload) => {
     setIsLoading(true)
     try {
-      const response = await api.post('/auth/account/signup/', payload)
-      
-      const receivedToken =
-        response.data?.data?.session_token ||
-        response.data?.token ||
-        response.data?.session_token ||
-        response.headers['x-session-token']
-
-      if (receivedToken) {
-        setAuthToken(receivedToken)
-        setTokenState(receivedToken)
+      const response = await api.post<Record<string, unknown>>(AUTH_URLS.SIGNUP, payload)
+      const accessToken = extractJwtToken(response.data)
+      if (accessToken) {
+        setAuthToken(accessToken)
+        setTokenState(accessToken)
         await refreshProfile()
       }
+      // If no token returned it may require email verification first
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Logout handler
+  // ─── Logout (DELETE /auth/session/) ──────────────────────────────────────
   const logout = async () => {
     setIsLoading(true)
     try {
-      await api.post('/auth/account/logout/').catch(() => {
-        // Ignore network errors on logout
+      await api.delete(AUTH_URLS.LOGOUT).catch(() => {
+        // Ignore network errors on logout — clear local state regardless
       })
     } finally {
       clearAuthToken()
@@ -132,34 +138,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  // Request password reset email (Allauth)
+  // ─── Request password reset email ────────────────────────────────────────
   const requestPasswordReset = async (email: string) => {
-    const response = await api.post('/auth/account/request-password/', { email })
-    return response.data
+    await api.post(AUTH_URLS.REQUEST_RESET, { email })
   }
 
-  // Change password (Allauth)
+  // ─── Change password (must be authenticated) ──────────────────────────────
   const changePassword = async (currentPassword: string, newPassword: string) => {
-    await api.post('/auth/account/change-password/', {
+    await api.post(AUTH_URLS.CHANGE_PASSWORD, {
       current_password: currentPassword,
       new_password: newPassword,
     })
   }
 
-  // Update profile in our own accounts app
+  // ─── Update profile fields via our accounts app ───────────────────────────
   const updateProfile = async (data: Partial<User> & { role_ids?: number[] }) => {
     const response = await api.patch<User>('/accounts/update_profile', data)
     setUser(response.data)
     return response.data
   }
 
-  // Fetch all system roles
+  // ─── Fetch system roles list ──────────────────────────────────────────────
   const fetchRoles = async (): Promise<Role[]> => {
     const response = await api.get<Role[]>('/accounts/roles/')
     return response.data
   }
 
-  const value = {
+  const value: AuthContextType = {
     user,
     token,
     isAuthenticated: !!token && !!user,
