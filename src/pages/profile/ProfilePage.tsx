@@ -253,7 +253,7 @@ export const ProfilePage: React.FC = () => {
                     id="penName"
                     value={penName}
                     onChange={(e) => setPenName(e.target.value)}
-                    placeholder="e.g. Jane Austen"
+                    placeholder=""
                   />
                 </div>
 
@@ -266,7 +266,7 @@ export const ProfilePage: React.FC = () => {
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+1 (555) 012-3456"
+                    placeholder=""
                   />
                 </div>
               </div>
