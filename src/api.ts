@@ -6,7 +6,7 @@ import axios, {
 } from 'axios'
 
 // Token storage key
-const TOKEN_KEY = 'omp_jwt_token'
+const TOKEN_KEY = 'omp_auth_token'
 
 // Helper utilities to manage JWT token in localStorage
 export const getAuthToken = (): string | null => {
