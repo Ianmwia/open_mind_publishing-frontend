@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null
     }
     try {
-      const response = await api.get<User>('/accounts/get_profile')
+      const response = await api.get<User>('/accounts/get_profile/')
       setUser(response.data)
       return response.data
     } catch {
@@ -153,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ─── Update profile fields via our accounts app ───────────────────────────
   const updateProfile = async (data: Partial<User> & { role_ids?: number[] }) => {
-    const response = await api.patch<User>('/accounts/update_profile', data)
+    const response = await api.patch<User>('/accounts/update_profile/', data)
     setUser(response.data)
     return response.data
   }
