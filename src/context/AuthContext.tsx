@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setIsLoading(true)
     try {
-      await api.delete(AUTH_URLS.LOGOUT).catch(() => {
+      await api.post(AUTH_URLS.LOGOUT).catch(() => {
         // Ignore network errors on logout — clear local state regardless
       })
     } finally {
