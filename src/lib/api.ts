@@ -16,9 +16,9 @@ import type {
 } from '../types/api'
 
 const API_BASE_URL = import.meta.env.PROD 
-  ? 'https://onrender.com' 
+  ? 'https://open-mind-publishing.onrender.com/api' 
   : 'http://localhost:8000/api'
-  
+
 const TOKEN_STORAGE_KEY = 'omp_auth_token'
 
 export function getStoredToken(): string | null {
