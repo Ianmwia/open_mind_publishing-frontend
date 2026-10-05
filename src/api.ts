@@ -24,7 +24,7 @@ export const clearAuthToken = (): void => {
 // Create centralized Axios instance
 export const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 
-         (import.meta.env.PROD ? 'https://open-mind-publishing.onrender.com' : 'http://localhost:8000'),
+         (import.meta.env.PROD ? 'https://open-mind-publishing.onrender.com/api' : 'http://localhost:8000/api'),
   timeout: 15000,
   withCredentials: true,
   headers: {
