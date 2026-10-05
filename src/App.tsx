@@ -4,6 +4,8 @@ import { ThemeProvider } from '@/context/ThemeContext'
 import { AuthProvider } from '@/context/AuthContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { useAuth } from '@/context/AuthContext'
+import {Toaster} from 'sonner'
+import { Analytics } from "@vercel/analytics/react"
 
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -34,6 +36,10 @@ export const App: React.FC = () => {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+
+          <Analytics />
+          <Toaster richColors position="top-right" />
+
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<HomePage />} />
