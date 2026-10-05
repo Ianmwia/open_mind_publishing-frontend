@@ -103,10 +103,10 @@ export const api = {
       return request<Role[]>('/accounts/roles/')
     },
     async getProfile(): Promise<User> {
-      return request<User>('/accounts/get_profile')
+      return request<User>('/accounts/get_profile/')
     },
     async updateProfile(payload: UserPatch): Promise<User> {
-      return request<User>('/accounts/update_profile', {
+      return request<User>('/accounts/update_profile/', {
         method: 'PATCH',
         body: JSON.stringify(payload),
       })
