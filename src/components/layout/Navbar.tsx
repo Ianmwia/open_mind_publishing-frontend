@@ -4,6 +4,7 @@ import { BookOpen, Moon, Sun, User as UserIcon, LogOut } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { Button } from '@/components/ui/button'
+import {toast} from 'sonner'
 
 export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth()
@@ -12,6 +13,7 @@ export const Navbar: React.FC = () => {
 
   const handleLogout = async () => {
     await logout()
+    toast.success('Logged out successfully!')
     navigate('/login')
   }
 

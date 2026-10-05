@@ -33,7 +33,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </h3>
 
         {/* Description */}
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 line-clamp-2 min-h-[2.5rem]">
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 line-clamp-2 min-h-10">
           {project.description || 'No description provided.'}
         </p>
 
