@@ -527,7 +527,7 @@ export const ProjectDetailPage: React.FC = () => {
                   <option value="">Select User...</option>
                   {allUsers.map((u) => (
                     <option key={u.id} value={u.id}>
-                      {u.pen_name || u.username} ({u.email || 'No email'})
+                      {u.pen_name || u.username}
                     </option>
                   ))}
                 </select>
