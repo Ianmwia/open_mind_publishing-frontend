@@ -68,12 +68,12 @@ export const LoginPage: React.FC = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="identifier">Username or Email</Label>
+              <Label htmlFor="identifier">Email</Label>
               <Input
                 id="identifier"
                 type="text"
                 required
-                placeholder="author_jane or jane@openmind.org"
+                placeholder="youremail@mail.com"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 autoComplete="username"
