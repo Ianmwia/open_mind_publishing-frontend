@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {Eye, EyeOff} from "lucide-react";
+import {Eye, EyeClosed} from "lucide-react";
 import {toast} from 'sonner'
 
 export const LoginPage: React.FC = () => {
@@ -109,7 +109,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
               >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showPassword ? <EyeClosed className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </Button>
             </div>
             </div>
