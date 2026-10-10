@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import api, { getAuthToken, setAuthToken, clearAuthToken } from '@/api'
+import api, { getAuthToken, setAuthToken, clearAuthToken, setRefreshToken, clearRefreshToken } from '@/api'
 import type { User, Role } from '@/types/api'
 
 // ─── Auth endpoint constants (matching backend urls.py) ──────────────────────
@@ -13,14 +13,14 @@ const AUTH_URLS = {
   RESET_PASSWORD: '/auth/password/reset/',
 } as const
 
-// ─── Helper: extract JWT access_token from allauth headless response ─────────
-// Allauth JWT strategy places the access_token inside response.data.meta
-function extractJwtToken(responseData: Record<string, unknown>): string | null {
+// ─── Helper: extract JWT access_token and refresh_token from allauth headless response ─────────
+// Allauth JWT strategy places the access_token and refresh_token inside response.data.meta
+function extractJwtTokens(responseData: Record<string, unknown>): { accessToken: string | null; refreshToken: string | null } {
   const meta = responseData?.meta as Record<string, unknown> | undefined
-  if (meta?.access_token && typeof meta.access_token === 'string') {
-    return meta.access_token
+  return {
+    accessToken: (meta?.access_token && typeof meta.access_token === 'string') ? meta.access_token : null,
+    refreshToken: (meta?.refresh_token && typeof meta.refresh_token === 'string') ? meta.refresh_token : null,
   }
-  return null
 }
 
 interface LoginPayload {
@@ -70,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return response.data
     } catch {
       clearAuthToken()
+      clearRefreshToken()
       setTokenState(null)
       setUser(null)
       return null
@@ -94,11 +95,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true)
     try {
       const response = await api.post<Record<string, unknown>>(AUTH_URLS.LOGIN, credentials)
-      const accessToken = extractJwtToken(response.data)
+      const { accessToken, refreshToken } = extractJwtTokens(response.data)
       if (!accessToken) {
         throw new Error('Login succeeded but no JWT access_token was returned. Check HEADLESS_TOKEN_STRATEGY in Django settings.')
       }
       setAuthToken(accessToken)
+      if (refreshToken) {
+        setRefreshToken(refreshToken)
+      }
       setTokenState(accessToken)
       await refreshProfile()
     } finally {
@@ -111,9 +115,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true)
     try {
       const response = await api.post<Record<string, unknown>>(AUTH_URLS.SIGNUP, payload)
-      const accessToken = extractJwtToken(response.data)
+      const { accessToken, refreshToken } = extractJwtTokens(response.data)
       if (accessToken) {
         setAuthToken(accessToken)
+        if (refreshToken) {
+          setRefreshToken(refreshToken)
+        }
         setTokenState(accessToken)
         await refreshProfile()
       }
@@ -132,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
     } finally {
       clearAuthToken()
+      clearRefreshToken()
       setTokenState(null)
       setUser(null)
       setIsLoading(false)
